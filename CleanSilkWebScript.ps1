@@ -1,6 +1,10 @@
 ﻿######################################################################################################################################
 #    Powershell Silk Performer Cleanup Script                                                                                        #
-#    Version: V1                                                                                                                     #
+#    Version: V2                                                                                                                     #
+#                                                                                                                                    #
+#    Change Log:                                                                                                                     #
+#    2020-04-09 V1: Initial log                                                                                                      #
+#    2020-04-09 V2: Added restoration of the <USE_HTML_VAL> in Forms after removing ""                                               #
 #                                                                                                                                    #
 #    KNOWN ISSUES:                                                                                                                   #
 #    1. Path for Source and Destination cannot handle quotes, this is required for locations with spaces                             #
@@ -25,6 +29,7 @@
 #    9. Remove double quotes from the truelog function call and replace it with "comment" (this is done so I can replace all the "") #
 #   10. Remove the "" from script                                                                                                    #
 #   11. Repair action in Forms after removing all the ""                                                                             #
+#   12. Repair action in Forms after removing all the "" to restore <USE_HTML_VAL>                                                   #
 #                                                                                                                                    #
 ######################################################################################################################################
 
@@ -95,7 +100,7 @@ $Input = $Input -Replace '"                             "',""
 # Remove double quotes from the truelog function call and replace it with "comment" (this is done so I can replace all the "")
 $NumberOfMatches = Select-String -InputObject $Input -Pattern 'TrueLogSection\("(\w*)", ""' -AllMatches
 $NumberOfMatches = $NumberOfMatches.Matches.Count
-$PrintOutputObject += new-object psobject -property @{Text="Modify "" from TruelogSection";"#Found"="$NumberOfMatches"}
+$PrintOutputObject += new-object psobject -property @{Text='Modify "" from TruelogSection';"#Found"="$NumberOfMatches"}
 $Input = $Input -Replace 'TrueLogSection\("(\w*)", ""','TrueLogSection("$1", "Comment"'
 
 # Remove the "" from script
@@ -109,6 +114,12 @@ $NumberOfMatches = Select-String -InputObject $Input -Pattern ':= ,' -AllMatches
 $NumberOfMatches = $NumberOfMatches.Matches.Count
 $PrintOutputObject += new-object psobject -property @{Text="Repair Forms that only had double quotes";"#Found"="$NumberOfMatches"}
 $Input = $Input -Replace ':= ,',':= "",'
+
+# Repair action in Forms after removing all the "" to restore <USE_HTML_VAL>
+$NumberOfMatches = Select-String -InputObject $Input -Pattern ':=  <USE_HTML_VAL> ,' -AllMatches
+$NumberOfMatches = $NumberOfMatches.Matches.Count
+$PrintOutputObject += new-object psobject -property @{Text="Repair Forms that contained <USE_HTML_VAL>";"#Found"="$NumberOfMatches"}
+$Input = $Input -Replace ':=  <USE_HTML_VAL> ,',':=  "" <USE_HTML_VAL> ,'
 
 #Write output to console
 if ($DebugEnabled) 
