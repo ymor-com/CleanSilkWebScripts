@@ -16,6 +16,7 @@
 #    2.2 Replacement pattern                                                                                                         #
 #    2.3 Output text                                                                                                                 #
 #    3. Cut long lines to smaller ones again                                                                                         #
+#    4. Remove comment lines                                                                                                         #
 #                                                                                                                                    #
 #    Things that are being picked up by the script                                                                                   #
 #    1. Remove Silkmade newlines                                                                                                     #
@@ -26,14 +27,12 @@
 #    6. Remove newlines created by removing ThinkTimes                                                                               #
 #    7. Replace Epoch timestamp(ms) with GetTimeStamp function                                                                       #
 #    8. Remove the "                             " which is created in the forms section after removing newlines                     #
-#    9. Remove double quotes from the truelog function call and replace it with "comment" (this is done so I can replace all the "") #
-#   10. Remove the "" from script                                                                                                    #
-#   11. Repair action in Forms after removing all the ""                                                                             #
-#   12. Repair action in Forms after removing all the "" to restore <USE_HTML_VAL>                                                   #
+#    9. Comment truelog sections
+#   10. Comment static content png css js svg bmp
 #                                                                                                                                    #
 ######################################################################################################################################
 
-param([Parameter(Mandatory=$true)] $SourceFile, [Parameter(Mandatory=$true)] $DestinationFile, $DebugEnabled=$true)
+param([Parameter(Mandatory=$true)] $SourceFile, [Parameter(Mandatory=$true)] $DestinationFile, $CommentTruelog=$true, $CommentStaticData=$true, $CommentCookies=$true, $DebugEnabled=$true)
 
 # Testing SourceFile location
 $FileExist = Test-Path -Path $SourceFile
@@ -67,11 +66,32 @@ $NumberOfMatches = $NumberOfMatches.Matches.Count
 $PrintOutputObject += new-object psobject -property @{Text="Thinktimes found";"#Found"="$NumberOfMatches"}
 $Input = $Input -replace "ThinkTime\([\d]\.[\d]\);",""
 
-# Comment all the WebCookieSet's
-$NumberOfMatches = Select-String -InputObject $Input -Pattern "WebCookieSet" -AllMatches
-$NumberOfMatches = $NumberOfMatches.Matches.Count
-$PrintOutputObject += new-object psobject -property @{Text="Web Cookies found";"#Found"="$NumberOfMatches"}
-$Input = $Input -replace "WebCookieSet","//WebCookieSet"
+if ($CommentCookies)
+{
+    # Comment all the WebCookieSet's
+    $NumberOfMatches = Select-String -InputObject $Input -Pattern "WebCookieSet" -AllMatches
+    $NumberOfMatches = $NumberOfMatches.Matches.Count
+    $PrintOutputObject += new-object psobject -property @{Text="Web Cookies found";"#Found"="$NumberOfMatches"}
+    $Input = $Input -replace "WebCookieSet","//WebCookieSet"
+}
+
+if ($CommentStaticData)
+{
+    # Comment all the static content like css and image files
+    $NumberOfMatches = Select-String -InputObject $Input -Pattern 'Web(.*)(png"|css"|js"|svg"|bmp")' -AllMatches
+    $NumberOfMatches = $NumberOfMatches.Matches.Count
+    $PrintOutputObject += new-object psobject -property @{Text="Static Content";"#Found"="$NumberOfMatches"}
+    $Input = $Input -replace 'Web(.*)(png"|css"|js"|svg"|bmp")','//Web$1$2'
+}
+
+if ($CommentTruelog)
+{
+    # Comment the truelog lines
+    $NumberOfMatches = Select-String -InputObject $Input -Pattern "Truelog" -AllMatches
+    $NumberOfMatches = $NumberOfMatches.Matches.Count
+    $PrintOutputObject += new-object psobject -property @{Text="Truelog sections";"#Found"="$NumberOfMatches"}
+    $Input = $Input -replace "Truelog","//Truelog"
+}
 
 # Remove regular newlines
 $NumberOfMatches = Select-String -InputObject $Input -Pattern ";`r`n `r`n    Web" -AllMatches
@@ -97,35 +117,20 @@ $NumberOfMatches = $NumberOfMatches.Matches.Count
 $PrintOutputObject += new-object psobject -property @{Text="Double quotes with spaces";"#Found"="$NumberOfMatches"}
 $Input = $Input -Replace '"                             "',""
 
-# Remove double quotes from the truelog function call and replace it with "comment" (this is done so I can replace all the "")
-$NumberOfMatches = Select-String -InputObject $Input -Pattern 'TrueLogSection\("(\w*)", ""' -AllMatches
-$NumberOfMatches = $NumberOfMatches.Matches.Count
-$PrintOutputObject += new-object psobject -property @{Text='Modify "" from TruelogSection';"#Found"="$NumberOfMatches"}
-$Input = $Input -Replace 'TrueLogSection\("(\w*)", ""','TrueLogSection("$1", "Comment"'
-
-# Remove the "" from script
-$NumberOfMatches = Select-String -InputObject $Input -Pattern '""' -AllMatches
-$NumberOfMatches = $NumberOfMatches.Matches.Count
-$PrintOutputObject += new-object psobject -property @{Text="Remove double quotes";"#Found"="$NumberOfMatches"}
-$Input = $Input -Replace '""',""
-
-# Repair action in Forms after removing all the ""
-$NumberOfMatches = Select-String -InputObject $Input -Pattern ':= ,' -AllMatches
-$NumberOfMatches = $NumberOfMatches.Matches.Count
-$PrintOutputObject += new-object psobject -property @{Text="Repair Forms that only had double quotes";"#Found"="$NumberOfMatches"}
-$Input = $Input -Replace ':= ,',':= "",'
-
-# Repair action in Forms after removing all the "" to restore <USE_HTML_VAL>
-$NumberOfMatches = Select-String -InputObject $Input -Pattern ':=  <USE_HTML_VAL> ,' -AllMatches
-$NumberOfMatches = $NumberOfMatches.Matches.Count
-$PrintOutputObject += new-object psobject -property @{Text="Repair Forms that contained <USE_HTML_VAL>";"#Found"="$NumberOfMatches"}
-$Input = $Input -Replace ':=  <USE_HTML_VAL> ,',':=  "" <USE_HTML_VAL> ,'
-
 #Write output to console
 if ($DebugEnabled) 
 { 
     Write-output -InputObject $PrintOutputObject
 }
+
+#--------------------------------
+# TESTING for large lines to be splitted
+$NumberOfMatches = Select-String -InputObject $Input -Pattern '[\W]{40}' -AllMatches
+Write-Output "------"
+$NumberOfMatches = $NumberOfMatches.Matches.Count
+Write-Output "TESTING: $NumberOfMatches"
+#--------------------------------
+
 
 # Write to file
 $Input > $DestinationFile
