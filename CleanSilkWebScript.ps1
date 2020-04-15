@@ -5,6 +5,10 @@
 #    Change Log:                                                                                                                     #
 #    2020-04-09 V1: Initial log                                                                                                      #
 #    2020-04-09 V2: Added restoration of the <USE_HTML_VAL> in Forms after removing ""                                               #
+#    2020-04-15 V3: Removed removing of "" and restore actions                                                                       #
+#                   Added commenting of truelog sections and switch for it                                                           #
+#                   Added commenting of static content and switch for it                                                             #
+#                   Added switch for commenting cookies                                                                              #
 #                                                                                                                                    #
 #    KNOWN ISSUES:                                                                                                                   #
 #    1. Path for Source and Destination cannot handle quotes, this is required for locations with spaces                             #
