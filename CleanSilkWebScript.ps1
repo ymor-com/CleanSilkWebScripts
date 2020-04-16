@@ -1,6 +1,6 @@
 ﻿######################################################################################################################################
 #    Powershell Silk Performer Cleanup Script                                                                                        #
-#    Version: V2                                                                                                                     #
+#    Version: V3                                                                                                                     #
 #                                                                                                                                    #
 #    Change Log:                                                                                                                     #
 #    2020-04-09 V1: Initial log                                                                                                      #
@@ -23,16 +23,16 @@
 #    4. Remove comment lines                                                                                                         #
 #                                                                                                                                    #
 #    Things that are being picked up by the script                                                                                   #
-#    1. Remove Silkmade newlines                                                                                                     #
-#    2. Remove Minimum Mean Time for all Web calls                                                                                   #
-#    3. Remove ThinkTimes                                                                                                            #
-#    4. Comment all the WebCookieSet's                                                                                               #
-#    5. Remove regular newlines                                                                                                      #
-#    6. Remove newlines created by removing ThinkTimes                                                                               #
-#    7. Replace Epoch timestamp(ms) with GetTimeStamp function                                                                       #
-#    8. Remove the "                             " which is created in the forms section after removing newlines                     #
-#    9. Comment truelog sections
-#   10. Comment static content png css js svg bmp
+#    - Remove Silkmade newlines                                                                                                      #
+#    - Remove Minimum Mean Time for all Web calls (Timers at the end of a Web call)                                                  #
+#    - Remove ThinkTimes                                                                                                             #
+#    - Remove regular newlines                                                                                                       #
+#    - Remove newlines created by removing ThinkTimes                                                                                #
+#    - Replace Epoch timestamp(ms) with GetTimeStamp function                                                                        #
+#    - Remove the "                             " which is created in the forms section after removing newlines                      #
+#    - Comment truelog sections                                                                                                      #
+#    - Comment static content png css js svg bmp                                                                                     #
+#    - Comment all the WebCookieSet's                                                                                                #
 #                                                                                                                                    #
 ######################################################################################################################################
 
@@ -129,11 +129,14 @@ if ($DebugEnabled)
 
 #--------------------------------
 # TESTING for large lines to be splitted
-$NumberOfMatches = Select-String -InputObject $Input -Pattern '[\W]{40}' -AllMatches
-Write-Output "------"
-$NumberOfMatches = $NumberOfMatches.Matches.Count
-Write-Output "TESTING: $NumberOfMatches"
+#$NumberOfMatches = Select-String -InputObject $Input -Pattern '([\W]{50})(.*)' -AllMatches
+#Write-Output "------"
+#$NumberOfMatches = $NumberOfMatches.Matches.Count
+#Write-Output "TESTING: $NumberOfMatches"
+#$Input = $Input -Replace '([\W]{50})(.*)','TESTING: $2'
+#Write-Output "TESTING: $1"
 #--------------------------------
+
 
 
 # Write to file
