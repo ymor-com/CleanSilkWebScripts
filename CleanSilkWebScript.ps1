@@ -2,6 +2,10 @@
 #    Powershell Silk Performer Cleanup Script                                                                                        #
 #    Version: V3                                                                                                                     #
 #                                                                                                                                    #
+#    Description:                                                                                                                    #
+#    This tool is build to automate some manual labor done after a new recording for Silk Web Scripts.                               #
+#    Please keep in mind that it is made for NEW recordings and does not work on existing script!                                    #
+#                                                                                                                                    #
 #    Change Log:                                                                                                                     #
 #    2020-04-09 V1: Initial log                                                                                                      #
 #    2020-04-09 V2: Added restoration of the <USE_HTML_VAL> in Forms after removing ""                                               #
