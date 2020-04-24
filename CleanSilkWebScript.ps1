@@ -1,7 +1,7 @@
 ﻿######################################################################################################################################
 #    Powershell Silk Performer Cleanup Script                                                                                        #
 #    Creator: Erik Post                                                                                                              #
-#    Version: V3                                                                                                                     #
+#    Version: V4                                                                                                                     #
 #                                                                                                                                    #
 #    Description:                                                                                                                    #
 #    This tool is build to automate some manual labor done after a new recording for Silk Web Scripts.                               #
@@ -14,6 +14,7 @@
 #                   Added commenting of truelog sections and switch for it                                                           #
 #                   Added commenting of static content and switch for it                                                             #
 #                   Added switch for commenting cookies                                                                              #
+#    2020-04-24 V4: Fixed too greedy newline removal                                                                               #
 #                                                                                                                                    #
 #    KNOWN ISSUES:                                                                                                                   #
 #    1. Path for Source and Destination cannot handle quotes, this is required for locations with spaces                             #
@@ -57,11 +58,20 @@ $PrintOutputObject = @()
 # Read file
 $Input = (Get-Content -raw -Path $SourceFile)
 
+#--------------------------------
+# Remove Silk Comments - TESTING
+#$NumberOfMatches = Select-String -InputObject $Input -Pattern "`r`n$" -AllMatches
+#$NumberOfMatches = $NumberOfMatches.Matches.Count
+#$PrintOutputObject += new-object psobject -property @{Text="Comment Lines";"#Found"="$NumberOfMatches"}
+#$Input = $Input -replace "^//.*",""
+#--------------------------------
+
 # Remove Silkmade newlines
-$NumberOfMatches = Select-String -InputObject $Input -Pattern "`r`n      " -AllMatches
+# Explanation: regex starts with checking for certain character to be available before the \r\n, newline shouls either be 6 or 7 spaces and then should not contain \\h (binary)
+$NumberOfMatches = Select-String -InputObject $Input -Pattern "(`"|, |,|\(|\w)`r`n(      |       )(?!`"\\h)" -AllMatches
 $NumberOfMatches = $NumberOfMatches.Matches.Count
-$PrintOutputObject += new-object psobject -property @{Text="Silkmade newlines found";"#Found"="$NumberOfMatches"}
-$Input = $Input -replace "`r`n      ",""
+$PrintOutputObject += new-object psobject -property @{Text="Remove Silkmade newlines";"#Found"="$NumberOfMatches"}
+$Input = $Input -replace "(`"|, |,|\(|\w)`r`n(      |       )(?!`"\\h)",'$1'
 
 # Remove Minimum Mean Time for all Web calls
 $NumberOfMatches = Select-String -InputObject $Input -Pattern ", [0-9]*\.[0-9]*\);" -AllMatches
